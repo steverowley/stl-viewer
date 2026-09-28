@@ -1,0 +1,29 @@
+# Build output
+app/out/
+app/dist*/
+app/src/bin/
+app/src/obj/
+
+# The published executable is large; ship it via GitHub Releases, not git
+*.exe
+
+# Test artefacts
+test/shots/
+test/*.stl
+!test/harness.js
+!test/cdp.js
+!test/file-mode.js
+
+# Scratch
+*.log
+nohup.out
+_launch_test.bat
+app/src/icon_preview.png
+
+# OS / editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vs/
+.vscode/
+*.user

@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>StlViewer</RootNamespace>
+    <AssemblyName>STL Viewer</AssemblyName>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+
+    <!-- Version / shell metadata -->
+    <Product>STL Viewer</Product>
+    <AssemblyTitle>STL Viewer</AssemblyTitle>
+    <FileDescription>STL Viewer - 3D model viewer</FileDescription>
+    <Version>1.0.0</Version>
+    <Company>Steve Rowley</Company>
+    <Copyright>Copyright (c) 2026 Steve Rowley. All rights reserved.</Copyright>
+
+    <!-- Single self-contained exe, trimmed of the framework bits we never touch -->
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+
+  <!-- Don't ship NuGet XML documentation alongside the app -->
+  <PropertyGroup>
+    <AllowedReferenceRelatedFileExtensions>none</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+
+  <!-- The UI is EMBEDDED IN THE EXE (not copied beside it), so the published
+       app is genuinely one self-contained file with no loose assets. -->
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\index.html" />
+    <EmbeddedResource Include="wwwroot\vendor\three.min.js" />
+  </ItemGroup>
+
+</Project>

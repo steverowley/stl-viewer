@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<!--
+  STL Viewer
+  Copyright (c) 2026 Steve Rowley. All rights reserved.
+  Proprietary and confidential. See LICENSE.
+-->
+
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STL Viewer</title>
+<style>
+  :root{
+    --bg:#15171c; --panel:#1c1f26; --panel2:#23262f; --line:#31353f;
+    --txt:#e6e8ee; --dim:#9aa1b1; --accent:#f0883e; --accent2:#4aa8ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
+    font:13px/1.45 "Segoe UI",system-ui,sans-serif;-webkit-user-select:none;user-select:none}
+  #app{display:flex;height:100%}
+
+  /* ---------- sidebar ---------- */
+  #side{width:264px;flex:0 0 264px;background:var(--panel);border-right:1px solid var(--line);
+    display:flex;flex-direction:column;min-height:0;overflow:hidden}
+  .brand{padding:14px 14px 10px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line)}
+  .brand svg{flex:0 0 auto}
+  .brand h1{font-size:14px;margin:0;font-weight:600;letter-spacing:.3px}
+  .brand span{font-size:11px;color:var(--dim);display:block;font-weight:400}
+  .sec{padding:12px 14px;border-bottom:1px solid var(--line)}
+  .sec h2,#infoSec summary{font-size:10px;text-transform:uppercase;letter-spacing:.9px;color:var(--dim);
+    margin:0 0 9px;font-weight:600}
+  #infoSec summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
+  #infoSec summary::-webkit-details-marker{display:none}
+  #infoSec summary::before{content:"▾";font-size:9px;transition:transform .15s}
+  #infoSec:not([open]) summary{margin-bottom:0}
+  #infoSec:not([open]) summary::before{transform:rotate(-90deg)}
+  #infoSec summary:hover{color:var(--txt)}
+  button{font:inherit;color:var(--txt);background:var(--panel2);border:1px solid var(--line);
+    border-radius:6px;padding:7px 10px;cursor:pointer}
+  button:hover{background:#2c313b;border-color:#454b58}
+  button:active{transform:translateY(1px)}
+  .primary{background:var(--accent);border-color:var(--accent);color:#1b1206;font-weight:600;width:100%}
+  .primary:hover{background:#ff9a4d;border-color:#ff9a4d}
+  .row{display:flex;gap:6px}.row>*{flex:1}
+  label.chk{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;color:var(--dim)}
+  label.chk:hover{color:var(--txt)}
+  input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
+  /* model list */
+  #list{flex:1 1 140px;overflow-y:auto;min-height:0;padding:8px}
+  #list::-webkit-scrollbar{width:9px}
+  #list::-webkit-scrollbar-thumb{background:#3a404c;border-radius:5px}
+  #list::-webkit-scrollbar-thumb:hover{background:#49505e}
+  #list::-webkit-scrollbar-track{background:transparent}
+  #list:empty::after{content:"No models loaded";display:block;text-align:center;
+    color:#5c6373;padding:26px 10px;font-style:italic}
+  .item{background:var(--panel2);border:1px solid var(--line);border-radius:7px;
+    padding:8px 9px;margin-bottom:7px;cursor:pointer}
+  .item:hover{border-color:#4a5160}
+  .item.sel{border-color:var(--accent)}
+  .item .top{display:flex;align-items:center;gap:7px}
+  .sw{width:14px;height:14px;border-radius:3px;border:1px solid rgba(255,255,255,.25);
+    flex:0 0 auto;padding:0;cursor:pointer}
+  .nm{flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+  .ico{background:none;border:none;padding:2px 4px;color:var(--dim);font-size:12px;line-height:1;border-radius:4px}
+  .ico:hover{color:var(--txt);background:#343a46}
+  .item .meta{font-size:10.5px;color:var(--dim);margin-top:4px;font-variant-numeric:tabular-nums}
+  .item.hid .nm,.item.hid .meta{opacity:.42;text-decoration:line-through}
+  /* info table */
+  #info{font-variant-numeric:tabular-nums;display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}
+  #info div{display:flex;justify-content:space-between;gap:6px;padding:1.5px 0;min-width:0}
+  #info .k{color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #info .v{font-weight:500;white-space:nowrap}
+  #info .wide{grid-column:1 / -1}
+  .hint{font-size:10.5px;color:#5c6373;padding:10px 14px;line-height:1.6;border-top:1px solid var(--line);
+    flex:0 0 auto}
+  .hint b{color:var(--dim);font-weight:600}
+  /* short windows: shed the optional hint text, then let the sidebar scroll */
+  @media (max-height:760px){ .hint{display:none} }
+  @media (max-height:660px){
+    #infoSec{display:none !important}
+    .sec{padding:9px 14px}
+  }
+
+  /* ---------- viewport ---------- */
+  #view{flex:1 1 auto;position:relative;min-width:0}
+  canvas{display:block;width:100%;height:100%}
+  #drop{position:absolute;inset:0;display:none;place-items:center;
+    background:rgba(21,23,28,.86);backdrop-filter:blur(2px);z-index:5;pointer-events:none}
+  #drop.on{display:grid}
+  #drop .box{border:2.5px dashed var(--accent);border-radius:16px;padding:44px 62px;text-align:center}
+  #drop .box b{display:block;font-size:19px;margin-bottom:5px}
+  #drop .box small{color:var(--dim)}
+  #busy{position:absolute;inset:0;display:none;place-items:center;background:rgba(21,23,28,.6);z-index:6}
+  #busy.on{display:grid}
+  #busy .sp{width:34px;height:34px;border:3px solid #3a404d;border-top-color:var(--accent);
+    border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #toast{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:7;
+    display:flex;flex-direction:column;gap:7px;align-items:center;pointer-events:none}
+  .tst{background:#2b2f39;border:1px solid var(--line);border-left:3px solid var(--accent2);
+    padding:9px 14px;border-radius:7px;font-size:12px;box-shadow:0 8px 26px rgba(0,0,0,.45);
+    animation:up .25s ease}
+  .tst.err{border-left-color:#ef5350}
+  @keyframes up{from{opacity:0;transform:translateY(8px)}}
+  #empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;
+    pointer-events:none;color:#555c6c}
+  #empty.gone{display:none}
+  #empty b{display:block;color:var(--dim);font-size:16px;font-weight:600;margin:14px 0 4px}
+  #hud{position:absolute;left:12px;bottom:10px;font-size:10.5px;color:#5f6575;
+    font-variant-numeric:tabular-nums;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="side">
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f0883e" stroke-width="1.6"
+           stroke-linejoin="round"><path d="M12 2.6 21 7.4v9.2L12 21.4 3 16.6V7.4z"/>
+        <path d="M3 7.4 12 12l9-4.6M12 12v9.4" stroke-width="1.2"/></svg>
+      <div><h1>STL Viewer</h1><span>drag &amp; drop to open</span></div>
+    </div>
+
+    <div class="sec">
+      <button class="primary" id="btnOpen">Open STL files…</button>
+      <input type="file" id="file" accept=".stl" multiple hidden>
+    </div>
+
+    <div class="sec">
+      <h2>View</h2>
+      <div class="row" style="margin-bottom:6px">
+        <button id="btnFit" title="Frame all visible models (F)">Fit</button>
+        <button id="btnTop" title="Top view (2)">Top</button>
+        <button id="btnFront" title="Front view (1)">Front</button>
+        <button id="btnIso" title="Isometric (3)">Iso</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="cWire"> Wireframe</label>
+      <label class="chk"><input type="checkbox" id="cEdge"> Show edges</label>
+      <label class="chk"><input type="checkbox" id="cGrid" checked> Grid &amp; axes</label>
+      <label class="chk"><input type="checkbox" id="cPlate" checked> Sit on plate, centred</label>
+      <label class="chk"><input type="checkbox" id="cSpin"> Auto-rotate</label>
+    </div>
+
+    <details class="sec" id="infoSec" style="display:none;flex:0 0 auto" open>
+      <summary id="infoTitle">Measurements</summary>
+      <div id="info"></div>
+    </details>
+
+    <div class="sec" style="flex:0 0 auto;padding-bottom:6px">
+      <h2 style="margin-bottom:0">Models</h2>
+    </div>
+    <div id="list"></div>
+
+    <div class="sec" style="border-top:1px solid var(--line);border-bottom:none">
+      <div class="row">
+        <button id="btnShot">Save PNG</button>
+        <button id="btnClear">Clear all</button>
+      </div>
+    </div>
+    <div class="hint">
+      <b>Left drag</b> rotate &nbsp;·&nbsp; <b>Right drag</b> pan &nbsp;·&nbsp; <b>Wheel</b> zoom<br>
+      <b>F</b> fit &nbsp;·&nbsp; <b>W</b> wireframe &nbsp;·&nbsp; <b>E</b> edges &nbsp;·&nbsp; <b>1/2/3</b> views
+    </div>
+  </aside>
+
+  <main id="view">
+    <div id="empty">
+      <div>
+        <svg width="76" height="76" viewBox="0 0 24 24" fill="none" stroke="#3f4653" stroke-width="1.2"
+             stroke-linejoin="round"><path d="M12 2.6 21 7.4v9.2L12 21.4 3 16.6V7.4z"/>
+          <path d="M3 7.4 12 12l9-4.6M12 12v9.4"/></svg>
+        <b>Drop an STL file here</b>
+        <small>binary or ASCII · multiple files welcome</small>
+      </div>
+    </div>
+    <div id="drop"><div class="box"><b>Release to load</b><small>.stl files</small></div></div>
+    <div id="busy"><div><div class="sp"></div><small id="busyTxt">Loading…</small></div></div>
+    <div id="toast"></div>
+    <div id="hud"></div>
+  </main>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script>
+"use strict";
+/* ============================================================
+   STL Viewer — local, offline, single page.
+   Scene is Z-up (like a slicer): X/Y = build plate, Z = height.
+   ============================================================ */
+
+/* ---------- 1. STL parsing ------------------------------------------------ */
+
+function isBinarySTL(buf){
+  // Authoritative test: does the declared triangle count match the byte length?
+  if (buf.byteLength < 84) return false;
+  const n = new DataView(buf).getUint32(80, true);
+  if (84 + n * 50 === buf.byteLength) return true;
+  // Otherwise trust the ASCII "solid" keyword.
+  const head = new TextDecoder().decode(new Uint8Array(buf, 0, Math.min(256, buf.byteLength)));
+  return !/^\s*solid/i.test(head);
+}
+
+function parseBinarySTL(buf){
+  const dv = new DataView(buf);
+  const n = dv.getUint32(80, true);
+  if (84 + n * 50 > buf.byteLength) throw new Error("file is truncated");
+  const pos = new Float32Array(n * 9);
+  let p = 0, o = 84;
+  for (let i = 0; i < n; i++){
+    o += 12;                                   // skip the stored face normal
+    for (let v = 0; v < 9; v++, o += 4) pos[p++] = dv.getFloat32(o, true);
+    o += 2;                                    // attribute byte count
+  }
+  return pos;
+}
+
+function parseAsciiSTL(text){
+  const out = [];
+  // Fast manual scan: find each "vertex" keyword and read the 3 numbers after it.
+  const re = /vertex\s+(-?[\d.eE+-]+)\s+(-?[\d.eE+-]+)\s+(-?[\d.eE+-]+)/g;
+  let m;
+  while ((m = re.exec(text)) !== null){
+    out.push(+m[1], +m[2], +m[3]);
+  }
+  if (out.length < 9 || out.length % 9 !== 0)
+    throw new Error("no complete triangles found (is this really an STL?)");
+  return new Float32Array(out);
+}
+
+function buildGeometry(buf){
+  let pos;
+  if (isBinarySTL(buf)) pos = parseBinarySTL(buf);
+  else pos = parseAsciiSTL(new TextDecoder().decode(buf));
+  if (!pos.length) throw new Error("file contains no triangles");
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  g.computeVertexNormals();   // non-indexed => one normal per face => crisp flat shading
+  g.computeBoundingBox();
+  g.computeBoundingSphere();
+  return g;
+}
+
+/** Signed-tetrahedron volume + surface area, in model units. */
+function measure(geom){
+  const p = geom.attributes.position.array;
+  let vol = 0, area = 0;
+  const ax=new THREE.Vector3(), bx=new THREE.Vector3(), cx=new THREE.Vector3(),
+        e1=new THREE.Vector3(), e2=new THREE.Vector3(), cr=new THREE.Vector3();
+  for (let i = 0; i < p.length; i += 9){
+    ax.set(p[i],p[i+1],p[i+2]); bx.set(p[i+3],p[i+4],p[i+5]); cx.set(p[i+6],p[i+7],p[i+8]);
+    vol += ax.dot(cr.copy(bx).cross(cx)) / 6;
+    e1.subVectors(bx,ax); e2.subVectors(cx,ax);
+    area += cr.crossVectors(e1,e2).length() / 2;
+  }
+  return { volume: Math.abs(vol), area, tris: p.length / 9 };
+}
+
+/* ---------- 2. Scene ----------------------------------------------------- */
+
+const view = document.getElementById("view");
+
+const renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x15171c);
+renderer.autoClear = false;
+view.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 100000);
+camera.up.set(0, 0, 1);                        // Z is up
+camera.position.set(140, -190, 130);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.34));
+const hemi = new THREE.HemisphereLight(0xdfe8ff, 0x2a2a30, 0.55);
+hemi.position.set(0, 0, 1); scene.add(hemi);
+const key = new THREE.DirectionalLight(0xffffff, 0.75);
+const rim = new THREE.DirectionalLight(0x9fc4ff, 0.3);
+scene.add(key, rim);
+
+// build plate: grid in the XY plane + labelled axes
+const helpers = new THREE.Group(); scene.add(helpers);
+let grid = null;
+function makeGrid(size){
+  if (grid) { helpers.remove(grid); grid.geometry.dispose(); }
+  const step = Math.max(1, Math.pow(10, Math.round(Math.log10(size / 10))));
+  const half = Math.ceil(size / step / 2) * step;
+  grid = new THREE.GridHelper(half * 2, (half * 2) / step, 0x3c424f, 0x282c35);
+  grid.rotation.x = Math.PI / 2;               // XZ -> XY plane
+  helpers.add(grid);
+}
+makeGrid(200);
+const axes = new THREE.AxesHelper(1); helpers.add(axes);
+
+// small orientation gizmo drawn in the corner
+const gizmoScene = new THREE.Scene();
+const gizmoCam = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+gizmoCam.up.set(0, 0, 1);
+gizmoScene.add(new THREE.AxesHelper(1));
+
+/* ---------- 3. Orbit controls (hand-rolled, Z-up) ------------------------ */
+
+const target = new THREE.Vector3();
+let sphR = 320, sphPhi = 1.05, sphTheta = -0.95;   // phi from +Z, theta around Z
+let autoSpin = false;
+
+function applyCamera(){
+  sphPhi = Math.max(0.001, Math.min(Math.PI - 0.001, sphPhi));
+  sphR = Math.max(0.02, sphR);
+  const sp = Math.sin(sphPhi);
+  camera.position.set(
+    target.x + sphR * sp * Math.cos(sphTheta),
+    target.y + sphR * sp * Math.sin(sphTheta),
+    target.z + sphR * Math.cos(sphPhi)
+  );
+  camera.lookAt(target);
+  key.position.copy(camera.position).add(new THREE.Vector3(0, 0, sphR * 0.4));
+  rim.position.copy(camera.position).multiplyScalar(-1);
+}
+
+const el = renderer.domElement;
+let drag = null;
+el.addEventListener("contextmenu", e => e.preventDefault());
+el.addEventListener("pointerdown", e => {
+  el.setPointerCapture(e.pointerId);
+  drag = { x:e.clientX, y:e.clientY, mode: (e.button === 0 && !e.shiftKey) ? "rot" : "pan" };
+});
+el.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.x = e.clientX; drag.y = e.clientY;
+  if (drag.mode === "rot"){
+    sphTheta -= dx * 0.0062;
+    sphPhi   -= dy * 0.0062;
+  } else {
+    const k = 2 * sphR * Math.tan(camera.fov * Math.PI / 360) / el.clientHeight;
+    const right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0);
+    const up    = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1);
+    target.addScaledVector(right, -dx * k).addScaledVector(up, dy * k);
+  }
+  applyCamera();
+});
+const endDrag = () => { drag = null; };
+el.addEventListener("pointerup", endDrag);
+el.addEventListener("pointercancel", endDrag);
+el.addEventListener("wheel", e => {
+  e.preventDefault();
+  sphR *= Math.exp(Math.sign(e.deltaY) * 0.12);
+  applyCamera();
+}, { passive:false });
+
+/* ---------- 4. Models ---------------------------------------------------- */
+
+const PALETTE = [0xf0883e, 0x4aa8ff, 0x64c98a, 0xd98ae0, 0xe3d268, 0xff7b72, 0x7fd8d0];
+const models = [];
+let selected = null, colorIdx = 0;
+
+function addModel(name, geom, bytes){
+  const stats = measure(geom);
+  const color = PALETTE[colorIdx++ % PALETTE.length];
+  const mat = new THREE.MeshPhongMaterial({
+    color, specular: 0x2e2e2e, shininess: 28, flatShading: true,
+    side: THREE.DoubleSide          // renders inside-out / non-manifold meshes sanely
+  });
+  const mesh = new THREE.Mesh(geom, mat);
+
+  const edges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(geom, 24),
+    new THREE.LineBasicMaterial({ color: 0x0d0f13, transparent:true, opacity:0.55 })
+  );
+  edges.visible = ui.cEdge.checked;
+  mesh.add(edges);
+
+  const size = new THREE.Vector3(), centre = new THREE.Vector3();
+  geom.boundingBox.getSize(size); geom.boundingBox.getCenter(centre);
+
+  const m = { name, mesh, edges, mat, geom, stats, size, centre, bytes,
+              color, visible:true };
+  models.push(m);
+  scene.add(mesh);
+  arrange();
+  return m;
+}
+
+/** Lay models out on the plate: single model centred, multiples in a spaced grid. */
+function arrange(){
+  if (!ui.cPlate.checked){
+    models.forEach(m => m.mesh.position.set(0, 0, 0));
+    return;
+  }
+  const n = models.length;
+  if (n === 0) return;
+  if (n === 1){
+    const m = models[0];
+    m.mesh.position.set(-m.centre.x, -m.centre.y, -m.geom.boundingBox.min.z);
+    return;
+  }
+  // grid sized to each model's own footprint so nothing interpenetrates
+  const cols = Math.ceil(Math.sqrt(n));
+  const rows = Math.ceil(n / cols);
+  const gap  = Math.max(...models.map(m => Math.max(m.size.x, m.size.y))) * 0.18 + 2;
+  const colW = new Array(cols).fill(0), rowD = new Array(rows).fill(0);
+  models.forEach((m, i) => {
+    const c = i % cols, r = Math.floor(i / cols);
+    colW[c] = Math.max(colW[c], m.size.x);
+    rowD[r] = Math.max(rowD[r], m.size.y);
+  });
+  const totalW = colW.reduce((a, b) => a + b, 0) + gap * (cols - 1);
+  const totalD = rowD.reduce((a, b) => a + b, 0) + gap * (rows - 1);
+  const colX = []; let x = -totalW / 2;
+  for (let c = 0; c < cols; c++){ colX.push(x + colW[c] / 2); x += colW[c] + gap; }
+  const rowY = []; let y = totalD / 2;
+  for (let r = 0; r < rows; r++){ rowY.push(y - rowD[r] / 2); y -= rowD[r] + gap; }
+  models.forEach((m, i) => {
+    const c = i % cols, r = Math.floor(i / cols);
+    m.mesh.position.set(colX[c] - m.centre.x, rowY[r] - m.centre.y, -m.geom.boundingBox.min.z);
+  });
+}
+
+function removeModel(m){
+  scene.remove(m.mesh);
+  m.geom.dispose(); m.mat.dispose();
+  m.edges.geometry.dispose(); m.edges.material.dispose();
+  models.splice(models.indexOf(m), 1);
+  if (selected === m) selected = models[0] || null;
+  arrange();
+  refresh();
+}
+
+/* world-space bounds of everything visible */
+function worldBounds(){
+  const box = new THREE.Box3();
+  let any = false;
+  for (const m of models){
+    if (!m.visible) continue;
+    box.union(new THREE.Box3().copy(m.geom.boundingBox).translate(m.mesh.position));
+    any = true;
+  }
+  return any ? box : null;
+}
+
+function fit(keepAngles = true){
+  const box = worldBounds();
+  if (!box){ target.set(0,0,0); sphR = 320; applyCamera(); return; }
+  box.getCenter(target);
+  const r = Math.max(box.getSize(new THREE.Vector3()).length() / 2, 0.5);
+  sphR = r / Math.sin(camera.fov * Math.PI / 360) * 1.15;
+  camera.near = Math.max(sphR / 4000, 0.01);
+  camera.far  = sphR * 60;
+  camera.updateProjectionMatrix();
+  if (!keepAngles){ sphPhi = 1.05; sphTheta = -0.95; }
+  applyCamera();
+}
+
+/* ---------- 5. Loading -------------------------------------------------- */
+
+const ui = {};
+["btnOpen","file","btnFit","btnTop","btnFront","btnIso","cWire","cEdge","cGrid","cPlate",
+ "cSpin","btnShot","btnClear","list","info","infoSec","infoTitle","drop","busy","busyTxt",
+ "toast","empty","hud"].forEach(id => ui[id] = document.getElementById(id));
+
+function toast(msg, err){
+  const d = document.createElement("div");
+  d.className = "tst" + (err ? " err" : "");
+  d.textContent = msg;
+  ui.toast.appendChild(d);
+  setTimeout(() => d.remove(), err ? 6000 : 3200);
+}
+
+const readFile = f => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(r.result);
+  r.onerror = () => rej(new Error("could not read the file from disk"));
+  r.readAsArrayBuffer(f);
+});
+const nextFrame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+async function loadFiles(fileList){
+  const files = [...fileList].filter(f => /\.stl$/i.test(f.name));
+  const skipped = fileList.length - files.length;
+  if (skipped > 0) toast(`Ignored ${skipped} non-STL file${skipped>1?"s":""}`, true);
+  if (!files.length) return;
+
+  const firstLoad = models.length === 0;
+  ui.busy.classList.add("on");
+  let ok = 0;
+  for (let i = 0; i < files.length; i++){
+    const f = files[i];
+    ui.busyTxt.textContent = files.length > 1
+      ? `Loading ${i+1} of ${files.length} — ${f.name}` : `Loading ${f.name}…`;
+    await nextFrame();                       // let the spinner actually paint
+    try {
+      const m = addModel(f.name, buildGeometry(await readFile(f)), f.size);
+      selected = m; ok++;
+    } catch (err){
+      console.error(f.name, err);
+      toast(`${f.name}: ${err.message}`, true);
+    }
+  }
+  ui.busy.classList.remove("on");
+  if (ok){
+    refresh();
+    fit(!firstLoad);
+    toast(ok === 1 ? `Loaded ${selected.name}` : `Loaded ${ok} models`);
+  }
+}
+
+/* ---------- 6. Sidebar rendering ---------------------------------------- */
+
+const nf = (v, d=2) => v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const kb = b => b >= 1048576 ? (b/1048576).toFixed(1)+" MB" : Math.max(1,Math.round(b/1024))+" KB";
+const hex = c => "#" + c.toString(16).padStart(6,"0");
+
+function refresh(){
+  ui.empty.classList.toggle("gone", models.length > 0);
+
+  // model list
+  ui.list.innerHTML = "";
+  for (const m of models){
+    const it = document.createElement("div");
+    it.className = "item" + (m === selected ? " sel" : "") + (m.visible ? "" : " hid");
+    it.innerHTML =
+      `<div class="top">
+         <button class="sw" title="Change colour" style="background:${hex(m.color)}"></button>
+         <span class="nm" title="${m.name}">${m.name}</span>
+         <button class="ico eye" title="Show / hide">${m.visible ? "◉" : "○"}</button>
+         <button class="ico del" title="Remove">✕</button>
+       </div>
+       <div class="meta">${m.stats.tris.toLocaleString()} triangles · ${kb(m.bytes)} ·
+         ${nf(m.size.x,1)} × ${nf(m.size.y,1)} × ${nf(m.size.z,1)}</div>`;
+    it.onclick = () => { selected = m; refresh(); };
+    it.querySelector(".eye").onclick = e => {
+      e.stopPropagation(); m.visible = !m.visible; m.mesh.visible = m.visible; refresh();
+    };
+    it.querySelector(".del").onclick = e => { e.stopPropagation(); removeModel(m); };
+    it.querySelector(".sw").onclick = e => {
+      e.stopPropagation();
+      m.color = PALETTE[(PALETTE.indexOf(m.color) + 1) % PALETTE.length];
+      m.mat.color.setHex(m.color); refresh();
+    };
+    ui.list.appendChild(it);
+  }
+
+  // measurements for the selected model
+  const m = selected;
+  ui.infoSec.style.display = m ? "block" : "none";
+  if (m){
+    const cm3 = m.stats.volume / 1000;
+    const rows = [
+      ["Width", nf(m.size.x,1) + " mm"],
+      ["Depth", nf(m.size.y,1) + " mm"],
+      ["Height", nf(m.size.z,1) + " mm"],
+      ["Tris", m.stats.tris.toLocaleString()],
+      ["Volume", (cm3 >= 0.1 ? nf(cm3,2) + " cm³" : nf(m.stats.volume,1) + " mm³")],
+      ["Surface", nf(m.stats.area / 100, 1) + " cm²"],
+      ["PLA weight", "≈ " + nf(cm3 * 1.24, 1) + " g", true]
+    ];
+    ui.infoTitle.textContent = "Measurements";
+    ui.info.innerHTML = rows
+      .map(([k,v,wide]) => `<div${wide ? ' class="wide"' : ""}><span class="k">${k}</span><span class="v">${v}</span></div>`)
+      .join("");
+  }
+
+  // helpers scaled to the scene
+  const box = worldBounds();
+  if (box){
+    const s = Math.max(box.getSize(new THREE.Vector3()).length(), 10);
+    makeGrid(s * 1.6);
+    axes.scale.setScalar(s * 0.35);
+  }
+  ui.hud.textContent = models.length
+    ? `${models.length} model${models.length>1?"s":""} · ` +
+      `${models.reduce((a,x)=>a+x.stats.tris,0).toLocaleString()} triangles · mm`
+    : "";
+}
+
+/* ---------- 7. Wiring --------------------------------------------------- */
+
+// When running inside the native app shell, let the host show a real
+// Windows file dialog and stream files in by URL instead of using <input>.
+const HOST = !!(window.chrome && window.chrome.webview);
+
+/** Called by the native host: fetch a mapped file URL and load it. */
+window.__loadFromHost = async (url, name) => {
+  ui.busy.classList.add("on");
+  ui.busyTxt.textContent = `Loading ${name}…`;
+  const firstLoad = models.length === 0;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`could not read the file (HTTP ${res.status})`);
+    const buf = await res.arrayBuffer();
+    selected = addModel(name, buildGeometry(buf), buf.byteLength);
+    refresh();
+    // First model in an empty scene: reset to the default iso view so
+    // host-opened files are framed the same way dropped files are.
+    fit(!firstLoad);
+    toast(`Loaded ${name}`);
+  } catch (err) {
+    console.error(name, err);
+    toast(`${name}: ${err.message}`, true);
+  } finally {
+    ui.busy.classList.remove("on");
+    // tell the host we are done with this URL so it can release the mapping
+    if (HOST) { try { window.chrome.webview.postMessage("loaded:" + name); } catch {} }
+  }
+};
+
+ui.btnOpen.onclick = () => {
+  if (HOST) window.chrome.webview.postMessage("pickFiles");
+  else ui.file.click();
+};
+ui.file.onchange  = e => { loadFiles(e.target.files); e.target.value = ""; };
+
+ui.btnFit.onclick   = () => fit(true);
+ui.btnFront.onclick = () => { sphPhi = Math.PI/2; sphTheta = -Math.PI/2; fit(true); };
+ui.btnTop.onclick   = () => { sphPhi = 0.02;      sphTheta = -Math.PI/2; fit(true); };
+ui.btnIso.onclick   = () => { sphPhi = 1.05;      sphTheta = -0.95;      fit(true); };
+
+ui.cWire.onchange = () => models.forEach(m => m.mat.wireframe = ui.cWire.checked);
+ui.cEdge.onchange = () => models.forEach(m => m.edges.visible = ui.cEdge.checked);
+ui.cGrid.onchange = () => helpers.visible = ui.cGrid.checked;
+ui.cSpin.onchange = () => autoSpin = ui.cSpin.checked;
+ui.cPlate.onchange = () => { arrange(); refresh(); fit(true); };
+
+ui.btnClear.onclick = () => { [...models].forEach(removeModel); fit(false); toast("Cleared"); };
+ui.btnShot.onclick = () => {
+  if (!models.length) return toast("Nothing to save yet", true);
+  render();
+  const a = document.createElement("a");
+  a.download = (selected ? selected.name.replace(/\.stl$/i,"") : "stl-view") + ".png";
+  a.href = renderer.domElement.toDataURL("image/png");
+  a.click();
+  toast("PNG saved to your Downloads folder");
+};
+
+// drag & drop over the whole window
+let dragDepth = 0;
+const hasFiles = e => [...(e.dataTransfer?.types || [])].includes("Files");
+addEventListener("dragenter", e => {
+  if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; ui.drop.classList.add("on");
+});
+addEventListener("dragover", e => { if (hasFiles(e)) e.preventDefault(); });
+addEventListener("dragleave", e => {
+  if (!hasFiles(e)) return;
+  if (--dragDepth <= 0){ dragDepth = 0; ui.drop.classList.remove("on"); }
+});
+addEventListener("drop", e => {
+  e.preventDefault(); dragDepth = 0; ui.drop.classList.remove("on");
+  if (e.dataTransfer.files.length) loadFiles(e.dataTransfer.files);
+});
+
+addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;
+  const k = e.key.toLowerCase();
+  if (k === "f") fit(true);
+  else if (k === "w"){ ui.cWire.checked = !ui.cWire.checked; ui.cWire.onchange(); }
+  else if (k === "e"){ ui.cEdge.checked = !ui.cEdge.checked; ui.cEdge.onchange(); }
+  else if (k === "g"){ ui.cGrid.checked = !ui.cGrid.checked; ui.cGrid.onchange(); }
+  else if (k === "1") ui.btnFront.onclick();
+  else if (k === "2") ui.btnTop.onclick();
+  else if (k === "3") ui.btnIso.onclick();
+  else if (k === "delete" && selected) removeModel(selected);
+});
+
+/* ---------- 8. Render loop ---------------------------------------------- */
+
+function resize(){
+  const w = view.clientWidth, h = view.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(h, 1);
+  camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+
+function render(){
+  renderer.clear();
+  renderer.setViewport(0, 0, view.clientWidth, view.clientHeight);
+  renderer.render(scene, camera);
+  // corner gizmo
+  const s = 78, pad = 10;
+  gizmoCam.position.copy(camera.position).sub(target).normalize().multiplyScalar(3.4);
+  gizmoCam.lookAt(0, 0, 0);
+  renderer.setViewport(view.clientWidth - s - pad, pad, s, s);
+  renderer.render(gizmoScene, gizmoCam);
+  renderer.setViewport(0, 0, view.clientWidth, view.clientHeight);
+}
+
+function tick(){
+  if (autoSpin){ sphTheta += 0.0038; applyCamera(); }
+  render();
+  requestAnimationFrame(tick);
+}
+
+resize(); applyCamera(); refresh(); tick();
+console.log("STL Viewer ready · three.js r" + THREE.REVISION);
+</script>
+</body>
+</html>

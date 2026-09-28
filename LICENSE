@@ -1,0 +1,49 @@
+Copyright (c) 2026 Steve Rowley. All rights reserved.
+
+PROPRIETARY SOFTWARE LICENCE
+
+This software and its source code (the "Software") are the exclusive property
+of Steve Rowley (the "Owner") and are protected by copyright law and
+international treaties.
+
+NO LICENCE IS GRANTED. No permission is given to any person to use, copy,
+modify, merge, publish, distribute, sublicense, sell, or create derivative
+works from the Software, in whole or in part, except under a separate written
+agreement signed by the Owner.
+
+You may NOT, without the Owner's prior written permission:
+
+  1. Use the Software for any commercial or non-commercial purpose;
+  2. Copy, reproduce, or redistribute the Software in any form;
+  3. Modify, adapt, translate, or create derivative works from the Software;
+  4. Reverse engineer, decompile, or disassemble the Software, except to the
+     limited extent such restriction is expressly prohibited by applicable law;
+  5. Remove, obscure, or alter any copyright, trademark, or other proprietary
+     notice contained in the Software;
+  6. Sell, rent, lease, sublicense, or otherwise transfer the Software or any
+     rights in it.
+
+VIEWING THIS SOURCE CODE DOES NOT GRANT ANY RIGHTS. Making the source visible,
+whether in a public repository or otherwise, is not an offer of a licence and
+does not place the Software in the public domain.
+
+ALL RIGHTS, TITLE AND INTEREST in and to the Software, including all
+intellectual property rights, remain exclusively with the Owner. The Owner
+reserves the right to license the Software commercially on terms of its
+choosing.
+
+THIRD-PARTY COMPONENTS. The Software incorporates third-party components that
+are licensed separately by their respective owners. See THIRD-PARTY-NOTICES.md.
+Those components remain governed by their own licences; this licence applies
+only to the Owner's original work.
+
+NO WARRANTY. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+LIMITATION OF LIABILITY. IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+
+For licensing enquiries, contact the Owner.
