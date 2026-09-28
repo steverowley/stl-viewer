@@ -8,7 +8,7 @@ and print-weight estimates.
 
 <br>
 
-[![Download for Windows](https://img.shields.io/badge/⬇%20Download%20for%20Windows-v1.0.0-f0883e?style=for-the-badge&logo=windows&logoColor=white&labelColor=1c1f26)](https://github.com/steverowley/stl-viewer/releases/latest/download/STL-Viewer-1.0.0-win-x64.zip)
+[![Download for Windows](https://img.shields.io/badge/Download%20for%20Windows-v1.0.0-f0883e?style=for-the-badge&logo=windows&logoColor=white&labelColor=1c1f26)](https://github.com/steverowley/stl-viewer/releases/latest/download/STL-Viewer-1.0.0-win-x64.zip)
 
 [![Version](https://img.shields.io/badge/version-1.0.0-4aa8ff?style=flat-square&labelColor=1c1f26)](https://github.com/steverowley/stl-viewer/releases/latest)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-4aa8ff?style=flat-square&labelColor=1c1f26)](#requirements)
