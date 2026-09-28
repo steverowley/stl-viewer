@@ -1,13 +1,61 @@
+<div align="center">
+
 # STL Viewer
 
-A fast, self-contained desktop STL viewer for Windows. Drag and drop `.stl`
-files to inspect 3D models, with dimensions, volume and print-weight estimates.
+**A fast, self-contained STL viewer for Windows.**
+Drag and drop `.stl` files to inspect 3D models — with dimensions, volume
+and print-weight estimates.
+
+<br>
+
+[![Download for Windows](https://img.shields.io/badge/⬇%20Download%20for%20Windows-v1.0.0-f0883e?style=for-the-badge&logo=windows&logoColor=white&labelColor=1c1f26)](https://github.com/steverowley/stl-viewer/releases/latest/download/STL-Viewer-1.0.0-win-x64.zip)
+
+[![Version](https://img.shields.io/badge/version-1.0.0-4aa8ff?style=flat-square&labelColor=1c1f26)](https://github.com/steverowley/stl-viewer/releases/latest)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-4aa8ff?style=flat-square&labelColor=1c1f26)](#requirements)
+[![Size](https://img.shields.io/badge/download-41%20MB-4aa8ff?style=flat-square&labelColor=1c1f26)](https://github.com/steverowley/stl-viewer/releases/latest)
+[![Licence](https://img.shields.io/badge/licence-proprietary-ff7b72?style=flat-square&labelColor=1c1f26)](LICENSE)
+
+<sub>No installation dependencies · Works offline · No telemetry</sub>
+
+</div>
+
+![STL Viewer](docs/screenshot.png)
+
+---
+
+## Download & install
+
+<table>
+<tr><td width="60" align="center"><b>1</b></td>
+<td><b><a href="https://github.com/steverowley/stl-viewer/releases/latest">Download the latest release</a></b><br>
+<sub>A single <code>.zip</code>, about 41 MB.</sub></td></tr>
+<tr><td align="center"><b>2</b></td>
+<td><b>Extract it anywhere</b><br>
+<sub>Right-click the zip → <i>Extract All…</i></sub></td></tr>
+<tr><td align="center"><b>3</b></td>
+<td><b>Run <code>install.bat</code></b><br>
+<sub>Adds a Start Menu entry and optionally opens <code>.stl</code> files by
+double-click. Installs to your own user folder — no admin rights needed.</sub></td></tr>
+</table>
+
+Prefer not to install? Just run **`STL Viewer.exe`** straight from the extracted
+folder — it works the same. To remove it later, run **`uninstall.bat`**.
+
+> [!NOTE]
+> The app is unsigned, so Windows SmartScreen may warn on first launch.
+> Click **More info → Run anyway**. This is normal for independent software;
+> removing the warning requires a paid code-signing certificate.
+
+### Requirements
+
+Windows 10 or 11 (64-bit). Nothing else — the .NET runtime is bundled, and the
+WebView2 component it renders with already ships with Windows.
+
+---
 
 **Proprietary software.** © 2026 Steve Rowley. All rights reserved.
 See [LICENSE](LICENSE) — the source is visible, but no licence to use, copy or
 distribute is granted.
-
-![STL Viewer](docs/screenshot.png)
 
 ## Features
 
@@ -23,19 +71,6 @@ distribute is granted.
   window instead of spawning a second one
 - **Save PNG** of the current view
 - Fully offline. No telemetry, no network access.
-
-## Install
-
-Download the latest release, then run `install.bat`.
-
-It installs per-user to `%LOCALAPPDATA%\Programs\STL Viewer`, adds a Start Menu
-entry, and optionally associates `.stl` files. No admin rights required.
-`uninstall.bat` reverses all of it.
-
-You can also run `STL Viewer.exe` directly without installing.
-
-> The executable is unsigned, so Windows SmartScreen may warn on first launch
-> ("More info" → "Run anyway"). Silencing that requires a code-signing certificate.
 
 ## Controls
 
